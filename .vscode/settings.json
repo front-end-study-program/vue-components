@@ -1,0 +1,25 @@
+{
+  "stylelint.validate": [
+    "css",
+    "less",
+    "postcss",
+    "scss",
+    "html"
+  ],
+  "eslint.validate": [
+    "javascript", 
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "vue",
+    "html",
+    "markdown",
+    "json", 
+    "jsonc", 
+    "json5"
+  ],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.stylelint": true,
+    "source.fixAll.eslint": true
+  }
+}
