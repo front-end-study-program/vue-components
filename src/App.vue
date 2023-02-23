@@ -15,8 +15,8 @@ function onClick () {
       {{ expanded ? '收起' : '展开' }}
     </button>
   </div>
-  <Collapse :expanded="expanded">
-    <div>
+  <Collapse>
+    <div v-if="expanded">
       <a
         href="https://vitejs.dev"
         target="_blank"

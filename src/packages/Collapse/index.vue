@@ -1,78 +1,72 @@
 <template>
-  <div
-    ref="wrapperRef"
-    class="collapse-wrapper"
+  <transition
+    name="collapse-transition"
+    v-on="on"
   >
-    <div
-      v-show="show"
-      ref="contentRef"
-      class="collapse-content"
-    >
-      <slot />
-    </div>
-  </div>
+    <slot />
+  </transition>
 </template>
+<script lang="ts" setup>
+import type { RendererElement } from 'vue'
 
-<script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
+const on = {
+  beforeEnter (el: RendererElement) {
+    if (!el.dataset) el.dataset = {}
 
-const props = defineProps<{
-  expanded: boolean
-}>()
+    el.dataset.oldPaddingTop = el.style.paddingTop
+    el.dataset.oldPaddingBottom = el.style.paddingBottom
 
-const wrapperRef = ref<HTMLElement>()
+    el.style.maxHeight = 0
+    el.style.paddingTop = 0
+    el.style.paddingBottom = 0
+  },
 
-const contentRef = ref<HTMLElement>()
-
-const show = ref(props.expanded)
-
-const doubleRaf = (fn: () => void) => {
-  nextTick(() => nextTick(fn))
-}
-
-watch(() => props.expanded, (value, oldValue) => {
-  if (oldValue === null) {
-    return
-  }
-
-  if (value) {
-    show.value = true
-  }
-
-  nextTick(() => {
-    if (!contentRef.value || !wrapperRef.value) {
-      return
-    }
-
-    const { offsetHeight } = contentRef.value
-    if (offsetHeight) {
-      const contentHeight = `${offsetHeight}px`
-      wrapperRef.value.style.height = value ? '0' : contentHeight
-
-      // use double raf to ensure animation can start
-      doubleRaf(() => {
-        if (wrapperRef.value) {
-          wrapperRef.value.style.height = value ? contentHeight : '0'
-        }
-      })
+  enter (el: RendererElement) {
+    el.dataset.oldOverflow = el.style.overflow
+    if (el.scrollHeight !== 0) {
+      el.style.maxHeight = `${el.scrollHeight}px`
+      el.style.paddingTop = el.dataset.oldPaddingTop
+      el.style.paddingBottom = el.dataset.oldPaddingBottom
     } else {
-      onTransitionEnd()
+      el.style.maxHeight = 0
+      el.style.paddingTop = el.dataset.oldPaddingTop
+      el.style.paddingBottom = el.dataset.oldPaddingBottom
     }
-  })
-}, { immediate: true })
 
-function onTransitionEnd () {
-  if (!props.expanded) {
-    show.value = false
-  } else if (wrapperRef.value) {
-    wrapperRef.value.style.height = ''
+    el.style.overflow = 'hidden'
+  },
+
+  afterEnter (el: RendererElement) {
+    el.style.maxHeight = ''
+    el.style.overflow = el.dataset.oldOverflow
+  },
+
+  beforeLeave (el: RendererElement) {
+    if (!el.dataset) el.dataset = {}
+    el.dataset.oldPaddingTop = el.style.paddingTop
+    el.dataset.oldPaddingBottom = el.style.paddingBottom
+    el.dataset.oldOverflow = el.style.overflow
+
+    el.style.maxHeight = `${el.scrollHeight}px`
+    el.style.overflow = 'hidden'
+  },
+
+  leave (el: RendererElement) {
+    if (el.scrollHeight !== 0) {
+      el.style.maxHeight = 0
+      el.style.paddingTop = 0
+      el.style.paddingBottom = 0
+    }
+  },
+
+  afterLeave (el: RendererElement) {
+    el.style.maxHeight = ''
+    el.style.overflow = el.dataset.oldOverflow
+    el.style.paddingTop = el.dataset.oldPaddingTop
+    el.style.paddingBottom = el.dataset.oldPaddingBottom
   }
 }
 </script>
-
-<style lang="less" scoped>
-.collapse-wrapper {
-  overflow: hidden;
-  transition: height 0.3s ease-in-out;
-}
+<style scoped lang="less">
+@import url('./styles.less');
 </style>
